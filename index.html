@@ -1,0 +1,1924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中秋震撼祝福</title>
+  <style>
+    /* ==========================================================
+       全局基础：深空蓝背景
+    ========================================================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+      color: #FFE9B8;
+      background:
+        radial-gradient(circle at 50% 20%, #16284a 0%, #0a1428 55%, #060d1e 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%; /* 防止 iOS 聚焦输入时自动放大页面 */
+    }
+    body.modal-open { overflow: hidden; } /* 弹出时禁止底层滚动 */
+
+    /* ==========================================================
+       页面入口
+    ========================================================== */
+    .page {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+      text-align: center;
+      padding: 24px;
+    }
+    .page-title {
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: 5px;
+      background: linear-gradient(120deg, #ffd700, #fff3c0 40%, #ff8c00);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 18px rgba(255, 215, 0, .35);
+    }
+    .page-sub { font-size: 15px; opacity: .75; letter-spacing: 2px; }
+
+    .entry-btn {
+      font-size: 18px;
+      font-weight: 700;
+      color: #1a1708;
+      min-height: 56px;
+      padding: 0 64px;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ffe27a, #ffd700 45%, #ff9a2a);
+      box-shadow: 0 0 22px rgba(255, 215, 0, .55), 0 10px 24px rgba(0, 0, 0, .4);
+      transition: transform .18s, box-shadow .18s;
+      letter-spacing: 2px;
+    }
+    .entry-btn:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(255,215,0,.75), 0 14px 28px rgba(0,0,0,.45); }
+    .entry-btn:active { transform: scale(.96); }
+
+    /* ==========================================================
+       蒙层
+    ========================================================== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483000; /* 全局最高层级 */
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(4, 10, 22, .6); /* 半透明深色蒙层 */
+      overflow: hidden;                /* 不随内容溢出滚动，高度由 JS 控制 */
+      touch-action: manipulation;
+    }
+    .overlay.show { display: flex; }
+
+    /* 收束关闭：整个场景缩小淡出 */
+    .overlay.closing { animation: closeAll .35s ease forwards; }
+    @keyframes closeAll {
+      from { opacity: 1; }
+      to   { opacity: 0; }
+    }
+    .overlay.closing .modal { transition: transform .3s, opacity .3s; transform: scale(.82); opacity: 0; }
+    .overlay.closing .moon-top { transition: transform .3s, opacity .3s; transform: scale(.4); opacity: 0; }
+
+    /* ---------- 开场：全屏金色闪光（0-0.2s） ---------- */
+    .flash {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 60vmax; height: 60vmax;
+      margin: -30vmax 0 0 -30vmax;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 215, 0, .95), rgba(255, 255, 240, 0) 62%);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .overlay.intro .flash { animation: goldFlash .2s ease-out forwards; }
+    @keyframes goldFlash {
+      0%   { transform: scale(.15); opacity: 1; }
+      100% { transform: scale(2.4); opacity: 0; }
+    }
+
+    /* ---------- 开场：巨大发光圆月冲出（0.2-0.6s）+ 收束（0.6-1.0s） ---------- */
+    .burst-moon {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 240px; height: 240px;
+      margin: -120px 0 0 -120px;
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 36% 34%, #fffbe0, #ffd700 46%, #ff8c00 82%);
+    }
+    .overlay.intro .burst-moon {
+      animation: burstMoon 1s ease-out forwards;
+    }
+    @keyframes burstMoon {
+      0%  { transform: scale(.1); filter: blur(8px); opacity: 0; box-shadow: 0 0 40px rgba(255,215,0,.3); }
+      38% { transform: scale(1.7); filter: blur(0); opacity: 1; box-shadow: 0 0 110px 40px rgba(255,215,0,.85); } /* 峰值约0.4s */
+      80% { transform: scale(1.95); filter: blur(2px); opacity: .92; box-shadow: 0 0 70px 20px rgba(255,215,0,.5); }
+      100%{ transform: scale(.3); filter: blur(8px); opacity: 0; box-shadow: 0 0 30px rgba(255,215,0,.2); }
+    }
+
+    /* ---------- 开场：金色粒子爆发（星光+桂花碎片） ---------- */
+    .burst-particles {
+      position: absolute; inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .pt {
+      position: absolute;
+      opacity: 0;
+      box-shadow: 0 0 6px rgba(255, 215, 0, .9);
+    }
+    .overlay.intro .pt { animation: ptBurst ease-out forwards; }
+    @keyframes ptBurst {
+      0%   { transform: translate(-50%, -50%) scale(.4)   rotate(var(--rot, 0deg)); opacity: 1; }
+      55%  { opacity: .85; }
+      100% { transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(.95) rotate(calc(var(--rot, 0deg) + 70deg)); opacity: 0; }
+    }
+
+    /* ---------- 弹窗卡片 ---------- */
+    .modal {
+      position: relative;
+      width: 100%;
+      max-width: 400px;            /* 移动端自适应 */
+      max-height: calc(100dvh - 96px);   /* 键盘/小屏弹出时卡片不超出可视区，可内部滚动 */
+      background: rgba(14, 26, 48, .82);   /* 半透明深色磨砂 */
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 215, 0, .5);  /* 金色描边 */
+      border-radius: 16px;
+      box-shadow: 0 0 40px rgba(255, 215, 0, .28), 0 30px 60px rgba(0, 0, 0, .6); /* 柔和外发光 */
+      padding: 24px 22px 22px;
+      text-align: center;
+      overflow-y: auto;            /* 纵向超高可滚动，保证内容完整可见 */
+      overflow-x: hidden;          /* 横向隐藏，裁剪卡片边缘扫光/petals 溢出 */
+      overscroll-behavior: contain;        /* 滚动到边界不触发底层页面滚动 */
+      -webkit-overflow-scrolling: touch;   /* iOS 惯性滚动 */
+      scrollbar-width: none;               /* 隐藏滚动条，保持样式不变 */
+      -ms-overflow-style: none;
+    }
+    .modal::-webkit-scrollbar { display: none; }
+    /* 开场阶段：祝福卡片弹簧式弹出（0.6-1.0s） */
+    .overlay.intro .modal {
+      animation: cardPop .55s cubic-bezier(.34, 1.6, .64, 1) .62s both;
+    }
+    @keyframes cardPop {
+      0%   { transform: scale(1.1); opacity: 0; }
+      60%  { transform: scale(.98); opacity: 1; }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+    /* 卡片边缘金色光扫过 */
+    .gold-sweep {
+      position: absolute;
+      top: 0; left: -30%;
+      width: 30%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 215, 0, .5), transparent);
+      transform: skewX(-20deg);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .overlay.intro .gold-sweep { animation: goldSweep .55s ease-out .62s both; }
+    @keyframes goldSweep {
+      0%   { left: -30%; opacity: 0; }
+      30%  { opacity: 1; }
+      100% { left: 110%; opacity: 0; }
+    }
+
+    /* 关闭按钮（右上角 ×，金色发光，≥44px） */
+    .close-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 48px; height: 48px;
+      border: none; cursor: pointer;
+      font-size: 24px; line-height: 1;
+      color: #FFD700;
+      background: rgba(255, 215, 0, .12);
+      border-radius: 50%;
+      transition: background .2s, transform .15s;
+    }
+    .close-btn:hover { background: rgba(255, 215, 0, .25); }
+    .close-btn:active { transform: scale(.9); }
+
+    /* ---------- 顶部发光圆月装饰（两面板共用） ---------- */
+    .moon-top {
+      width: 120px; height: 120px;
+      margin: 8px auto 14px;
+      position: relative;
+      z-index: 2;
+    }
+    .moon-top .moon-face {
+      position: absolute; left: 50%; top: 50%;
+      width: 84px; height: 84px;
+      margin: -42px 0 0 -42px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 215, 0, .6);
+      background: radial-gradient(circle at 36% 32%, #fffbe0, #ffd700 52%, #ff8c00 88%);
+      /* 呼吸发光，2s 一个周期 */
+      animation: moonBreathe 2s ease-in-out infinite;
+    }
+    .moon-top .moon-eye {
+      position: absolute;
+      width: 10px; height: 7px;
+      border-bottom: 3px solid #ff8c00;
+      border-radius: 0 0 12px 12px;
+      top: 44px;
+    }
+    .moon-top .moon-eye.left  { left: 40px; }
+    .moon-top .moon-eye.right { right: 40px; }
+    .moon-top .moon-mouth {
+      position: absolute;
+      width: 24px; height: 14px;
+      border-bottom: 3px solid #ff8c00;
+      border-radius: 0 0 24px 24px;
+      left: 50%; transform: translateX(-50%);
+      top: 66px;
+    }
+    @keyframes moonBreathe {
+      0%, 100% { box-shadow: 0 0 14px rgba(255, 215, 0, .35); }
+      50%      { box-shadow: 0 0 34px rgba(255, 215, 0, .85); }
+    }
+    /* 点缀星光闪烁 */
+    .twinkle-star {
+      position: absolute; z-index: 3;
+      color: #FFD700;
+      animation: twinkle 2.4s ease-in-out infinite;
+    }
+    .twinkle-star.t1 { top: 2px;  left: 8px; font-size: 14px; }
+    .twinkle-star.t2 { bottom: 8px; right: 6px; font-size: 22px; animation-delay: .6s; }
+    .twinkle-star.t3 { top: 30px; right: 0; font-size: 11px; animation-delay: 1.2s; }
+    @keyframes twinkle {
+      0%, 100% { opacity: .35; transform: scale(.85) rotate(0); }
+      50%      { opacity: 1;   transform: scale(1.15) rotate(30deg); }
+    }
+
+    /* ---------- 面板通用（淡入淡出切换） ---------- */
+    .panel { display: none; }
+    .panel.active { display: block; }
+    #panelInput.active { animation: panelFade .3s ease; }
+    @keyframes panelFade {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 输入面板点亮：开场 1.0-1.2s 逐次点亮 */
+    .overlay.intro .moon-top        { animation: lightIn .3s ease .96s both; }
+    .overlay.intro #panelInput .modal-title { animation: lightIn .3s ease 1.02s both; }
+    .overlay.intro #panelInput .modal-sub   { animation: lightIn .3s ease 1.08s both; }
+    .overlay.intro #panelInput .name-input  { animation: lightIn .3s ease 1.14s both; }
+    .overlay.intro #panelInput .primary-btn { animation: lightIn .3s ease 1.2s both; }
+    @keyframes lightIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------- 输入面板文字 ---------- */
+    .modal-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: linear-gradient(120deg, #ffd700, #fff3c0 45%, #ff8c00);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 14px rgba(255, 215, 0, .35); /* 微弱外发光 */
+      margin-bottom: 8px;
+    }
+    .modal-sub {
+      font-size: 13px;
+      letter-spacing: 1px;
+      opacity: .7;
+      color: #E6C98A; /* 浅金色 */
+      margin-bottom: 20px;
+    }
+
+    /* ---------- 输入框：金色发光 + 微光流动 ---------- */
+    .input-wrap { position: relative; }
+    .name-input {
+      width: 100%;
+      min-height: 48px;
+      font-size: 18px;
+      color: #FFD700;
+      caret-color: #ffd700;
+      background: rgba(255, 215, 0, .06);
+      border: 1px solid rgba(255, 215, 0, .55);
+      border-radius: 12px;
+      padding: 12px 16px;
+      outline: none;
+      position: relative;
+      z-index: 1;
+      transition: box-shadow .2s, border-color .2s;
+    }
+    .name-input:focus {
+      border-color: #ffd700;
+      box-shadow: 0 0 0 3px rgba(255, 215, 0, .2), 0 0 18px rgba(255, 215, 0, .35);
+    }
+    .name-input::placeholder { color: #7d8fb0; }
+    /* 输入框内部微光流动 */
+    .input-shine {
+      position: absolute; inset: 2px;
+      border-radius: 10px;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .input-shine::after {
+      content: "";
+      position: absolute; top: 0;
+      width: 60%; height: 100%;
+      left: -60%;
+      background: linear-gradient(100deg, transparent, rgba(255, 215, 0, .15), transparent);
+      animation: inputShine 3.2s ease-in-out infinite;
+    }
+    @keyframes inputShine {
+      0%   { left: -60%; }
+      55%  { left: 130%; }
+      100% { left: 130%; }
+    }
+
+    /* ---------- 主按钮：金色渐变 + 法阵纹理 ---------- */
+    .primary-btn {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      min-height: 52px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #1a1708;
+      letter-spacing: 3px;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      margin-top: 20px;
+      background:
+        repeating-radial-gradient(circle, transparent 0 7px, rgba(20, 12, 0, .14) 7px 9px) center/cover,
+        linear-gradient(135deg, #ffe27a, #ffd700 45%, #ff9a2a); /* 法阵圆形纹理叠加 */
+      box-shadow: 0 0 18px rgba(255, 215, 0, .4), 0 8px 18px rgba(0, 0, 0, .35);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .primary-btn:hover { transform: translateY(-1px); box-shadow: 0 0 26px rgba(255,215,0,.55), 0 10px 20px rgba(0,0,0,.4); }
+    .primary-btn:active { transform: scale(.97); }
+
+    /* 按钮点击：环形光波扩散 */
+    .ripple {
+      position: absolute;
+      width: 20px; height: 20px;
+      margin: -10px 0 0 -10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .65);
+      transform: scale(0);
+      animation: rippleExpand .6s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes rippleExpand {
+      to { transform: scale(16); opacity: 0; }
+    }
+
+    /* ---------- 祝福面板：法阵 + 姓名浮现 ---------- */
+    .circle-wrap {
+      position: relative;
+      width: 120px; height: 120px;
+      margin: 4px auto 6px;
+    }
+    .magic-ring {
+      position: absolute; left: 50%; top: 50%;
+      border-radius: 50%;
+    }
+    .magic-ring.r1 { width: 118px; height: 118px; margin: -59px 0 0 -59px; border: 1px solid rgba(255,215,0,.5); border-top-color: #ffd700; }
+    .magic-ring.r2 { width: 90px;  height: 90px;  margin: -45px 0 0 -45px;  border: 1px dashed rgba(255,215,0,.45); }
+    .magic-ring.r3 { width: 60px;  height: 60px;  margin: -30px 0 0 -30px;  border: 1px solid rgba(255,215,0,.8); border-bottom-color: transparent; }
+
+    /* 祝福刻印：确认点击后触发（总时长约1s） */
+    /* 姓名化作金光上飞 + 输入面板淡出 */
+    .overlay.engraving #panelInput { animation: fadeOutUp .45s ease .05s both; }
+    @keyframes fadeOutUp {
+      to { opacity: 0; transform: translateY(-18px); }
+    }
+    #panelBless.active.lit .circle-wrap { animation: circleIn .5s cubic-bezier(.2,1.4,.5,1) .15s both; }
+    @keyframes circleIn {
+      from { opacity: 0; transform: scale(.3) rotate(-40deg); }
+      to   { opacity: 1; transform: scale(1)   rotate(0);     }
+    }
+    #panelBless.active.lit .r1 { animation: spin 6s linear infinite; }
+    #panelBless.active.lit .r2 { animation: spin 8s linear infinite reverse; }
+    #panelBless.active.lit .r3 { animation: spin 4s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 姓名：金色立体发光浮现，视觉核心 */
+    .bless-name {
+      position: relative;
+      z-index: 2;
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1.25;
+      word-break: break-word;
+      letter-spacing: 2px;
+      background: linear-gradient(160deg, #fff3c0, #ffd700 45%, #ff9a2a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      /* 金色立体外发光 */
+      margin-bottom: 8px;
+    }
+    #panelBless.active.lit .bless-name { animation: nameLift .6s cubic-bezier(.2,1.4,.5,1) .28s both; }
+    @keyframes nameLift {
+      from { opacity: 0; transform: translateY(16px) scale(.7); filter: drop-shadow(0 0 6px rgba(255,215,0,.3)); }
+      to   { opacity: 1; transform: translateY(0) scale(1);    filter: drop-shadow(0 0 16px rgba(255,215,0,.55)); }
+    }
+    /* 固定祝福语逐字缓慢浮现（每字递增延迟 120ms） */
+    .bless-text {
+      font-size: 17px;
+      line-height: 1.75;
+      color: #FFE9B8;
+    }
+    .bless-text span {
+      display: inline-block;
+      white-space: pre;             /* 保留空格宽度 */
+      opacity: 0;                   /* 未点亮前隐藏 */
+    }
+    #panelBless.active.lit .bless-text span {
+      animation: charIn .55s cubic-bezier(.2,1.4,.5,1) var(--d) forwards;
+    }
+    @keyframes charIn {
+      from { opacity: 0; transform: translateY(12px) scale(.5); filter: drop-shadow(0 0 10px rgba(255,215,0,.65)); }
+      to   { opacity: 1; transform: translateY(0) scale(1);    filter: drop-shadow(0 0 3px rgba(255,215,0,.15)); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    /* 底部按钮依次出现 */
+    #panelBless.active.lit .btn-row { animation: fadeUp .5s ease-out .7s both; }
+
+    /* 再点亮一次：祝福面板轻微收束淡出（复用收束感） */
+    #panelBless.out-down { animation: blessShrink .32s ease forwards; }
+    @keyframes blessShrink {
+      from { opacity: 1; transform: scale(1); }
+      to   { opacity: 0; transform: scale(.94); }
+    }
+
+    /* 祝福面板：蓝色星空 + 朦胧圆月 + 桂花飘落 */
+    .bless-bg {
+      position: absolute; inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255, 215, 0, .22), transparent 55%); /* 朦胧圆月光晕 */
+    }
+    .osmanthus {
+      position: absolute;
+      top: -18px;
+      width: 10px; height: 8px;
+      border-radius: 60% 40% 60% 40%;
+      background: rgba(255, 140, 0, .5);
+      opacity: 0;
+      animation: petalFall linear infinite;
+    }
+    .osmanthus.o1 { left: 10%; animation-duration: 5.4s; animation-delay: 0s; }
+    .osmanthus.o2 { left: 30%; animation-duration: 6.8s; animation-delay: 1.2s; }
+    .osmanthus.o3 { left: 52%; animation-duration: 5.9s; animation-delay: .4s; }
+    .osmanthus.o4 { left: 74%; animation-duration: 7.2s; animation-delay: 2s; }
+    .osmanthus.o5 { left: 88%; animation-duration: 6.3s; animation-delay: 1.5s; }
+    @keyframes petalFall {
+      0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+      10%  { opacity: .75; }
+      100% { transform: translateY(520px) translateX(14px) rotate(200deg); opacity: .45; }
+    }
+
+    /* 按钮行 */
+    .btn-row {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+      margin-bottom: 34px;          /* 底部留空间给右下角悬浮入口 */
+    }
+    .btn-row .primary-btn { margin-top: 0; }
+    .ghost-btn {
+      flex: 1;
+      min-height: 48px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #FFD700;
+      background: rgba(255, 215, 0, .1);
+      border: 1px solid rgba(255, 215, 0, .6);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .ghost-btn:hover { background: rgba(255, 215, 0, .22); }
+    .ghost-btn:active { transform: scale(.97); }
+
+    /* ---------- 玩法区域：祝福语点亮完成后展开 ---------- */
+    .play-area {
+      position: relative;
+      z-index: 2;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      margin-top: 0;
+      transition: max-height .5s ease, opacity .5s ease, margin-top .5s ease;
+    }
+    .play-area.open {
+      max-height: 360px;            /* 展开容纳玩法内容 */
+      opacity: 1;
+      margin-top: 14px;
+    }
+    .game-title {
+      font-size: 14px;
+      letter-spacing: 2px;
+      color: rgba(255, 215, 0, .9);
+      margin-bottom: 10px;
+      text-shadow: 0 0 12px rgba(255, 215, 0, .4);
+    }
+    .game { display: none; }
+    .game.active { display: block; animation: gameIn .4s ease both; }
+    .game.active[hidden] { display: none; }   /* hidden 优先级高于 .active，保证互斥 */
+    @keyframes gameIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 许愿玩法：发光输入框 + 微光流动 */
+    .wish-wrap { position: relative; }
+    .wish-shine {
+      position: absolute; inset: 0;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(255, 215, 0, .22), transparent);
+      background-size: 220% 100%;
+      animation: shineFlow 2.4s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes shineFlow { from { background-position: 220% 0; } to { background-position: -220% 0; } }
+    .wish-input {
+      width: 100%;
+      box-sizing: border-box;
+      height: 48px;
+      padding: 0 16px;
+      text-align: center;
+      font-size: 15px;
+      color: #ffd700;
+      background: rgba(255, 215, 0, .06);
+      border: 1px solid rgba(255, 215, 0, .55);
+      border-radius: 999px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .wish-input:focus { border-color: #ffd700; box-shadow: 0 0 18px rgba(255, 215, 0, .35); }
+    .wish-input::placeholder { color: rgba(255, 215, 0, .45); }
+    .wish-btn { margin-top: 12px; }
+    /* 提交瞬间：输入文字渐隐为金色光点（输入区收缩淡出） */
+    .wish-wrap.fade { transition: opacity .3s ease, transform .3s ease; opacity: 0; transform: scale(.82); }
+
+    /* 月签玩法：摇签按钮摇晃 + 签文卡片回弹 */
+    .lot-btn { margin-top: 12px; }
+    .lot-btn.shaking { animation: shakeX 1s ease; }
+    @keyframes shakeX {
+      0%, 100% { transform: translateX(0); }
+      15% { transform: translateX(-7px); }
+      30% { transform: translateX(7px); }
+      45% { transform: translateX(-5px); }
+      60% { transform: translateX(5px); }
+      75% { transform: translateX(-3px); }
+      90% { transform: translateX(3px); }
+    }
+    .lot-card {
+      margin: 16px auto 0;
+      max-width: 300px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255, 215, 0, .45);
+      box-shadow: 0 0 20px rgba(255, 215, 0, .15);
+      opacity: 0;
+    }
+    .lot-card.show { animation: popIn .5s cubic-bezier(.2, 1.6, .5, 1) both; }
+    @keyframes popIn {
+      0%   { opacity: 0; transform: scale(.6) translateY(10px); }
+      60%  { transform: scale(1.08) translateY(0); }
+      100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .lot-type {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(160deg, #fff3c0, #ffd700 50%, #ff9a2a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 6px;
+    }
+    .lot-words { font-size: 13.5px; line-height: 1.8; color: #FFE9B8; }
+
+    /* ---------- 许愿场景：夜空 · 星点 · 孔明灯 · 山影 ---------- */
+    .game-wish { position: relative; border-radius: 14px; }
+    .wish-scene {
+      position: absolute; inset: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(8, 16, 40, .92), rgba(20, 34, 72, .8) 45%, rgba(84, 58, 32, .72)); /* 夜空→暖橙地平线 */
+    }
+    .wish-content { position: relative; z-index: 1; padding: 14px 10px 12px; }
+    .wish-star {
+      position: absolute; width: 3px; height: 3px; border-radius: 50%;
+      background: #ffe9a8; box-shadow: 0 0 6px #ffd700;
+      opacity: .3;
+      animation: starTwinkle 2.6s ease-in-out infinite;
+    }
+    .wish-star.s1 { left: 14%; top: 16%; animation-delay: 0s; }
+    .wish-star.s2 { left: 38%; top: 8%;  animation-delay: .7s; }
+    .wish-star.s3 { left: 62%; top: 14%; animation-delay: 1.3s; }
+    .wish-star.s4 { left: 82%; top: 10%; animation-delay: .4s; }
+    .wish-star.s5 { left: 24%; top: 32%; animation-delay: 1.8s; }
+    .wish-star.s6 { left: 70%; top: 28%; animation-delay: 1s; }
+    @keyframes starTwinkle {
+      0%, 100% { opacity: .2; transform: scale(.8); }
+      50%      { opacity: 1; transform: scale(1.25); }
+    }
+    .lantern {
+      position: absolute; bottom: -24px;
+      width: 8px; height: 13px;
+      background: radial-gradient(ellipse at 50% 30%, #ffcf6b, #ff8c00 70%);
+      border-radius: 45% 45% 50% 50%;
+      box-shadow: 0 0 10px rgba(255, 160, 40, .8);
+      animation: lanternRise linear infinite;
+      opacity: 0;
+    }
+    .lantern::before {
+      content: ''; position: absolute; left: 50%; top: -3px;
+      width: 4px; height: 3px; transform: translateX(-50%);
+      background: #b8860b; border-radius: 2px 2px 0 0;
+    }
+    .lantern.l1 { left: 18%; animation-duration: 9s;  animation-delay: 0s; }
+    .lantern.l2 { left: 55%; animation-duration: 11s; animation-delay: 2.5s; }
+    .lantern.l3 { left: 80%; animation-duration: 10s; animation-delay: 5s; }
+    @keyframes lanternRise {
+      0%   { transform: translateY(0) translateX(0) rotate(0); opacity: 0; }
+      10%  { opacity: .9; }
+      60%  { opacity: .65; }
+      100% { transform: translateY(-160px) translateX(12px) rotate(6deg); opacity: 0; }
+    }
+    .hills {
+      position: absolute; bottom: 0; left: -6%; right: -6%;
+      height: 30px;
+      background: rgba(6, 12, 26, .6);
+      clip-path: polygon(0 100%, 12% 40%, 26% 72%, 45% 30%, 62% 66%, 78% 44%, 100% 100%);
+    }
+
+    /* ---------- 月签场景：金雾 · 法阵 · 光柱 ---------- */
+    .game-lot { position: relative; border-radius: 14px; }
+    .lot-scene {
+      position: absolute; inset: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(52, 42, 16, .62), rgba(16, 28, 62, .88)); /* 金雾夜色 */
+    }
+    .lot-content { position: relative; z-index: 1; padding: 14px 10px 12px; }
+    .lot-star {
+      position: absolute; width: 3px; height: 3px; border-radius: 50%;
+      background: #ffe9a8; box-shadow: 0 0 6px #ffd700;
+      opacity: .3;
+      animation: starTwinkle 2.8s ease-in-out infinite;
+    }
+    .lot-star.s1 { left: 16%; top: 14%; animation-delay: .3s; }
+    .lot-star.s2 { left: 44%; top: 22%; animation-delay: 1.1s; }
+    .lot-star.s3 { left: 68%; top: 12%; animation-delay: 2s; }
+    .lot-star.s4 { left: 86%; top: 26%; animation-delay: .8s; }
+    .lot-mandala {
+      position: absolute; left: 50%; top: 40px;
+      width: 132px; height: 132px; margin: -66px 0 0 -66px;
+      border: 1px dashed rgba(255, 215, 0, .35);
+      border-radius: 50%;
+      animation: spin 14s linear infinite;
+    }
+    .lot-mandala::before {
+      content: ''; position: absolute; inset: 12px;
+      border: 1px solid rgba(255, 215, 0, .28);
+      border-top-color: rgba(255, 215, 0, .85);
+      border-radius: 50%;
+    }
+    .lot-mandala::after {
+      content: ''; position: absolute; inset: 30px;
+      border: 1px solid rgba(255, 215, 0, .45);
+      border-radius: 50%;
+    }
+    .lot-fog {
+      position: absolute; width: 72px; height: 26px; border-radius: 50%;
+      background: rgba(255, 215, 140, .14); filter: blur(8px);
+      animation: fogDrift ease-in-out infinite alternate;
+    }
+    .lot-fog.f1 { left: 6%;  top: 20px; animation-duration: 5s; }
+    .lot-fog.f2 { right: 4%; top: 52px; animation-duration: 6.4s; animation-delay: 1s; }
+    @keyframes fogDrift {
+      from { transform: translateX(-8px); opacity: .35; }
+      to   { transform: translateX(12px); opacity: .8; }
+    }
+    .lot-beam {
+      position: absolute; left: 50%; bottom: 0;
+      width: 48px; height: 150px;
+      transform: translateX(-50%) scaleY(0);
+      transform-origin: bottom;
+      background: linear-gradient(to top, rgba(255, 215, 0, .5), rgba(255, 220, 120, .12) 70%, transparent);
+      border-radius: 50% 50% 0 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .lot-beam.on { animation: beamUp .8s ease-out both; }
+    @keyframes beamUp {
+      from { transform: translateX(-50%) scaleY(0); opacity: 0; }
+      to   { transform: translateX(-50%) scaleY(1); opacity: 1; }
+    }
+
+    /* ---------- 「收下祝福」进度揭示：全部玩法结束（抽签完成）后才出现 ---------- */
+    #takeBtn { display: none; }                    /* 玩法未结束前隐藏，不占布局 */
+    #takeBtn.reveal {
+      display: block;
+      animation: btnReveal .4s ease both;          /* 出现时上浮淡入 */
+    }
+    @keyframes btnReveal {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------- 右下角悬浮入口：想了解作者？ ---------- */
+    .author-fab {
+      position: absolute;           /* 相对 .modal（relative）定位 */
+      right: 12px;
+      bottom: 28px;                 /* 紧贴按钮行下方，不遮挡任何按钮 */
+      z-index: 3;
+      display: none;                /* 仅祝福面板显示 */
+      min-height: 30px;
+      padding: 0 13px;
+      font-size: 11px;
+      letter-spacing: .5px;
+      color: rgba(255, 215, 0, .5);        /* 默认低亮度 */
+      background: rgba(255, 215, 0, .07);
+      border: 1px solid rgba(255, 215, 0, .32);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: color .2s, background .2s, border-color .2s;
+    }
+    #panelBless.active + .author-fab { display: block; }
+    .author-fab:hover { color: #ffd700; background: rgba(255, 215, 0, .18); border-color: rgba(255, 215, 0, .7); }
+    .author-fab:active { transform: scale(.96); }
+
+    /* ---------- 作者信息三级弹窗 ---------- */
+    .author-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483700;          /* 覆盖在主弹窗之上、倒计时之下 */
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(4, 10, 22, .6);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+    }
+    .author-overlay.show { display: flex; }
+    .author-card {
+      position: relative;
+      width: min(340px, calc(100vw - 48px));
+      min-height: 250px;
+      background: rgba(14, 26, 48, .94);
+      border: 1px solid rgba(255, 215, 0, .5);
+      border-radius: 16px;
+      box-shadow: 0 0 44px rgba(255, 215, 0, .28), 0 30px 60px rgba(0, 0, 0, .6);
+      padding: 26px 20px 20px;
+      text-align: center;
+      overflow: hidden;
+    }
+    /* L1 → L2 卡片收缩为金色光点（L2 → L3 粒子光环收拢复用） */
+    .author-card.collapse { animation: cardCollapse .42s ease-in both; }
+    @keyframes cardCollapse {
+      from { transform: scale(1); opacity: 1; }
+      to   { transform: scale(0); opacity: 0; }
+    }
+    .author-pane { position: relative; z-index: 1; }
+    .author-pane[hidden] { display: none; }
+
+    /* 第1层 */
+    .author-l1-title {
+      font-size: 18px; font-weight: 800;
+      color: #ffd700;
+      margin-bottom: 12px;
+      text-shadow: 0 0 12px rgba(255, 215, 0, .5);
+    }
+    .author-l1-text {
+      font-size: 14px; line-height: 1.7;
+      color: #FFE9B8;
+      margin-bottom: 20px;
+    }
+    .author-btn {
+      min-height: 44px;
+      padding: 0 20px;
+      font-size: 14px; font-weight: 700; letter-spacing: 1px;
+      color: #0a1428;
+      background: linear-gradient(160deg, #ffe9a8, #ffd700 55%, #ff9a2a);
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(255, 215, 0, .35);
+      transition: transform .15s;
+    }
+    .author-btn:hover { transform: translateY(-1px); }
+    .author-btn:active { transform: scale(.97); }
+    .author-x {
+      position: absolute; top: 6px; right: 8px;
+      width: 44px; height: 44px;      /* ≥44px 可点击 */
+      border: none; background: none;
+      font-size: 22px; line-height: 1;
+      color: rgba(255, 215, 0, .6);
+      cursor: pointer;
+    }
+    .author-x:hover { color: #ffd700; }
+
+    /* 第2层：斐波那契粒子仪式 */
+    #authorL2 { position: relative; min-height: 236px; }
+    #authorCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+    .author-spiral { position: relative; z-index: 1; padding-top: 64px; }
+    .author-line {
+      display: flex;
+      justify-content: center;
+      min-height: 26px;
+      font-size: 15px; font-weight: 700; letter-spacing: 2px;
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, .5);
+    }
+    .author-line + .author-line { margin-top: 6px; }
+    .spiral-char {
+      display: inline-block;
+      opacity: 0;
+      transform: translate(var(--tx, 0px), var(--ty, 0px));
+    }
+    .author-line.show .spiral-char {
+      animation: charGather .6s cubic-bezier(.3, .8, .4, 1) both;
+      animation-delay: var(--d, 0s);
+    }
+    @keyframes charGather {
+      from { opacity: 0; transform: translate(var(--tx, 0px), var(--ty, 0px)); filter: drop-shadow(0 0 8px rgba(255, 215, 0, .75)); }
+      to   { opacity: 1; transform: translate(0, 0); filter: none; }
+    }
+    .author-next2 { margin-top: 16px; position: relative; z-index: 2; }
+
+    /* 第3层：保密页 */
+    .author-secret {
+      font-size: 28px; font-weight: 900; letter-spacing: 6px;
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255, 215, 0, .55);
+      margin: 12px 0 14px;
+    }
+    .author-secret-sub {
+      font-size: 13.5px; line-height: 1.9;
+      color: #FFE9B8;
+      margin-bottom: 6px;
+    }
+    .author-pub-hint {
+      font-size: 11.5px;
+      letter-spacing: 1px;
+      color: rgba(255, 215, 0, .55);
+      margin-bottom: 20px;
+    }
+    /* 得加钱趣味入口 */
+    .author-pay-btn {
+      position: relative;
+      min-height: 44px;
+      margin-top: 14px;
+      padding: 0 14px;
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      color: rgba(255, 215, 0, .75);
+      background: rgba(255, 215, 0, .1);
+      border: 1px dashed rgba(255, 215, 0, .5);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: color .2s, background .2s, border-color .2s;
+    }
+    .author-pay-btn:hover { color: #ffd700; background: rgba(255, 215, 0, .2); border-color: rgba(255, 215, 0, .9); }
+    .pay-tip {
+      position: relative;
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 14px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #FFE9B8;
+      background: rgba(255, 215, 0, .12);
+      border: 1px solid rgba(255, 215, 0, .45);
+      border-radius: 12px;
+      box-shadow: 0 0 22px rgba(255, 215, 0, .22);
+    }
+    .pay-tip-title { font-size: 13px; font-weight: 800; color: #ffd700; margin-bottom: 6px; letter-spacing: .5px; }
+    .pay-tip-info { font-size: 13.5px; letter-spacing: 1px; }
+    .pay-tip-grade { margin-top: 2px; color: #ffd700; font-weight: 700; }
+    .pay-tip.show { animation: payTipIn .35s cubic-bezier(.3, .8, .4, 1) both; }
+    @keyframes payTipIn {
+      from { opacity: 0; transform: translateY(8px) scale(.9); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* 许愿飞行特效：容器沿直线飞向圆月，内部光点横向摆动形成弧线 */
+    .wish-flight {
+      position: absolute;
+      z-index: 6;
+      pointer-events: none;
+    }
+    .flight-core {
+      position: absolute;
+      left: 0; top: 0;
+      width: 10px; height: 10px;
+      margin: -5px 0 0 -5px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff8d0, #ffd700 55%, rgba(255, 140, 0, .6));
+      box-shadow: 0 0 14px 6px rgba(255, 215, 0, .55);
+      opacity: 0;
+    }
+    .flight-petal {
+      position: absolute;
+      left: 0; top: 0;
+      width: 9px; height: 7px;
+      margin: -3.5px 0 0 -4.5px;
+      border-radius: 60% 40% 60% 40%;
+      background: rgba(255, 150, 40, .95);
+      opacity: 0;
+    }
+    .wish-flight.fly { animation: flyLine 1.7s cubic-bezier(.4, 0, .6, 1) both; }
+    @keyframes flyLine {
+      from { transform: translate(0, 0); }
+      to   { transform: translate(var(--tx, 0px), var(--ty, 0px)); }
+    }
+    .wish-flight.fly .flight-core { animation: flightCore 1.7s ease-in-out both; }
+    @keyframes flightCore {
+      0%   { transform: translate(-40px, 0) scale(.5); opacity: 0; }
+      12%  { opacity: 1; }
+      55%  { transform: translate(34px, -6px) scale(1); opacity: 1; }
+      100% { transform: translate(-6px, 0) scale(.4); opacity: .15; }
+    }
+    .wish-flight.fly .flight-petal { animation: petalGather 1.7s ease-in-out both; }
+    @keyframes petalGather {
+      0%   { transform: translate(var(--ox, 0px), var(--oy, 0px)) scale(0) rotate(0deg); opacity: 0; }
+      15%  { opacity: 1; }
+      55%  { transform: translate(var(--ox, 0px), var(--oy, 0px)) scale(.9) rotate(120deg); opacity: 1; }
+      100% { transform: translate(0, 0) scale(.6) rotate(220deg); opacity: .5; }
+    }
+
+    /* 圆月接触瞬间：光晕爆发 + 星光散出 */
+    .moon-flash {
+      position: absolute;
+      width: 60px; height: 60px;
+      margin: -30px 0 0 -30px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 230, 150, .9), rgba(255, 200, 60, .35) 45%, transparent 70%);
+      opacity: 0;
+      z-index: 5;
+      pointer-events: none;
+    }
+    .moon-flash.burst { animation: moonBurst .6s ease-out both; }
+    @keyframes moonBurst {
+      0%   { opacity: 0; transform: scale(.4); }
+      30%  { opacity: 1; transform: scale(1.6); }
+      100% { opacity: 0; transform: scale(2.4); }
+    }
+    .flash-star {
+      position: absolute;
+      width: 4px; height: 4px;
+      margin: -2px 0 0 -2px;
+      border-radius: 50%;
+      background: #ffd700;
+      box-shadow: 0 0 8px #ffd700;
+      z-index: 6;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .flash-star.go { animation: starSpread .7s ease-out both; }
+    @keyframes starSpread {
+      from { transform: translate(0, 0) scale(.6); opacity: 1; }
+      to   { transform: translate(var(--dx, 0px), var(--dy, 0px)) scale(0); opacity: 0; }
+    }
+
+    /* ---------- 3秒粒子倒计时覆盖层 ---------- */
+    .countdown {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483900;         /* 覆盖在弹窗之上 */
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(4, 10, 22, .94); /* 深空蓝遮罩，突出粒子数字 */
+    }
+    .countdown.show { display: flex; }
+    .countdown canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .cd-hint {
+      position: relative;
+      z-index: 1;
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: rgba(255, 215, 0, .85);
+      margin-top: 46vh;            /* 数字下方提示 */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ======= 页面入口 ======= -->
+  <div class="page">
+    <div class="page-title">🌕 中秋快乐</div>
+    <div class="page-sub">点击按钮，开始你的中秋祝福光轨秀</div>
+    <button class="entry-btn" type="button" id="openBtn">开启祝福</button>
+  </div>
+
+  <!-- ======= 弹窗 ======= -->
+  <div class="overlay" id="overlay">
+
+    <!-- 开场全屏金色闪光 + 巨大圆月 + 粒子爆发（均非阻塞） -->
+    <div class="flash"></div>
+    <div class="burst-moon"></div>
+    <div class="burst-particles" id="burstParticles"></div>
+
+    <div class="modal">
+      <!-- 卡片边缘金色光扫过 -->
+      <div class="gold-sweep"></div>
+
+      <!-- 关闭按钮（右上角 ×，收束关闭） -->
+      <button class="close-btn" type="button" id="closeBtn" title="关闭">×</button>
+
+      <div class="moon-top" id="moonTop">
+        <div class="moon-face"></div>
+        <div class="moon-eye left"></div>
+        <div class="moon-eye right"></div>
+        <div class="moon-mouth"></div>
+        <span class="twinkle-star t1">✦</span>
+        <span class="twinkle-star t2">✦</span>
+        <span class="twinkle-star t3">✦</span>
+      </div>
+
+      <!-- 面板一：输入 -->
+      <div class="panel active" id="panelInput">
+        <div class="modal-title">请输入你的名字</div>
+        <div class="modal-sub">祝福即将为你点亮</div>
+        <div class="input-wrap">
+          <div class="input-shine"></div>
+          <input class="name-input" id="nameInput" type="text" placeholder="请输入姓名">
+        </div>
+        <button class="primary-btn" type="button" id="confirmBtn">点亮祝福</button>
+      </div>
+
+      <!-- 面板二：祝福 -->
+      <div class="panel" id="panelBless">
+        <div class="bless-bg">
+          <div class="osmanthus o1"></div>
+          <div class="osmanthus o2"></div>
+          <div class="osmanthus o3"></div>
+          <div class="osmanthus o4"></div>
+          <div class="osmanthus o5"></div>
+        </div>
+        <div class="circle-wrap">
+          <div class="magic-ring r1"></div>
+          <div class="magic-ring r2"></div>
+          <div class="magic-ring r3"></div>
+        </div>
+        <div class="bless-name" id="blessName"></div>
+        <div class="bless-text" id="blessText"></div>
+
+        <!-- 玩法区域：祝福语点亮完成后延迟 1.2s 展开，同一时间仅显示一个玩法 -->
+        <div class="play-area" id="playArea">
+          <!-- 玩法一：桂花许愿（夜空 · 孔明灯 · 山影场景） -->
+          <div class="game game-wish" id="wishGame">
+            <div class="wish-scene">
+              <span class="wish-star s1"></span>
+              <span class="wish-star s2"></span>
+              <span class="wish-star s3"></span>
+              <span class="wish-star s4"></span>
+              <span class="wish-star s5"></span>
+              <span class="wish-star s6"></span>
+              <span class="lantern l1"></span>
+              <span class="lantern l2"></span>
+              <span class="lantern l3"></span>
+              <span class="hills"></span>
+            </div>
+            <div class="wish-content">
+              <div class="game-title">向明月许个愿</div>
+              <div class="wish-wrap">
+                <div class="wish-shine"></div>
+                <input class="wish-input" id="wishInput" type="text" placeholder="写下你的中秋小愿望" maxlength="30">
+              </div>
+              <button class="primary-btn wish-btn" type="button" id="wishBtn">寄往明月</button>
+            </div>
+          </div>
+          <!-- 玩法二：中秋月签（金雾 · 法阵 · 光柱场景） -->
+          <div class="game game-lot" id="lotGame" hidden>
+            <div class="lot-scene">
+              <span class="lot-star s1"></span>
+              <span class="lot-star s2"></span>
+              <span class="lot-star s3"></span>
+              <span class="lot-star s4"></span>
+              <span class="lot-mandala"></span>
+              <span class="lot-fog f1"></span>
+              <span class="lot-fog f2"></span>
+              <div class="lot-beam" id="lotBeam"></div>
+            </div>
+            <div class="lot-content">
+              <div class="game-title">抽取你的中秋月签</div>
+              <button class="primary-btn lot-btn" type="button" id="lotBtn">摇签求福</button>
+              <div class="lot-card" id="lotCard">
+                <div class="lot-type" id="lotType"></div>
+                <div class="lot-words" id="lotWords"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 许愿飞行特效（光点+花瓣沿弧线飞向顶部圆月，absolute 相对 .modal） -->
+        <div class="wish-flight" id="wishFlight"></div>
+        <!-- 圆月接触瞬间的光晕爆发层 -->
+        <div class="moon-flash" id="moonFlash"></div>
+
+        <div class="btn-row">
+          <button class="ghost-btn" type="button" id="againBtn">再点亮一次</button>
+          <button class="primary-btn" type="button" id="takeBtn">收下祝福</button>
+        </div>
+      </div>
+
+      <!-- 右下角悬浮入口：想了解作者？（仅祝福面板显示） -->
+      <button class="author-fab" type="button" id="authorFab">想了解作者？</button>
+
+    </div>
+
+    <!-- 3秒粒子倒计时覆盖层（祝福刻印前） -->
+    <div class="countdown" id="countdown">
+      <canvas id="cdCanvas"></canvas>
+      <div class="cd-hint">✨ 正在凝聚祝福...</div>
+    </div>
+
+    <!-- 作者信息三级弹窗 -->
+    <div class="author-overlay" id="authorOverlay">
+      <div class="author-card" id="authorCard">
+        <!-- 第1层：简洁信息卡片 -->
+        <div class="author-pane" id="authorL1">
+          <div class="author-l1-title">想了解作者？</div>
+          <div class="author-l1-text">作者来自广西科技大学</div>
+          <button class="author-btn" type="button" id="authorNext1">继续深入了解作者</button>
+          <button class="author-x" type="button" id="authorClose1" aria-label="关闭">×</button>
+        </div>
+        <!-- 第2层：斐波那契螺旋粒子仪式 -->
+        <div class="author-pane" id="authorL2" hidden>
+          <canvas id="authorCanvas"></canvas>
+          <div class="author-spiral" id="authorSpiral">
+            <div class="author-line" id="authorLine1"></div>
+            <div class="author-line" id="authorLine2"></div>
+          </div>
+          <button class="author-btn author-next2" type="button" id="authorNext2" hidden>透彻了解作者</button>
+          <button class="author-x" type="button" id="authorClose2" aria-label="关闭">×</button>
+        </div>
+        <!-- 第3层：保密页 -->
+        <div class="author-pane" id="authorL3" hidden>
+          <div class="author-secret">保密</div>
+          <div class="author-secret-sub">作者来自广西科技大学 · 机械与汽车工程学院</div>
+          <div class="author-pub-hint">专业与年级已加密，解锁可见 🔒</div>
+          <button class="author-btn" type="button" id="authorClose3">关闭</button>
+          <button class="author-pay-btn" type="button" id="authorPayBtn">真的想了解？得加钱 💰</button>
+          <div class="pay-tip" id="payTip" hidden>
+            <div class="pay-tip-title">💳 付费成功 · 最后一块拼图已解锁</div>
+            <div class="pay-tip-info pay-tip-grade">机械电子工程 · 2025 级</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ========== 预设祝福语库（活泼日常版） ========== */
+    var BLESSINGS = [
+      "中秋祝福到～月饼吃好，快乐拉满！",
+      "中秋快乐呀，好事连连，月圆人更圆。",
+      "叮咚！你的专属中秋祝福已送达，节日快乐～",
+      "愿你月饼吃到饱，快乐没烦恼，中秋开心！"
+    ];
+
+    /* ========== DOM 引用 ========== */
+    var overlay     = document.getElementById('overlay');
+    var openBtn     = document.getElementById('openBtn');
+    var closeBtn    = document.getElementById('closeBtn');
+    var confirmBtn  = document.getElementById('confirmBtn');
+    var takeBtn     = document.getElementById('takeBtn');
+    var againBtn    = document.getElementById('againBtn');
+    var nameInput   = document.getElementById('nameInput');
+    var panelInput  = document.getElementById('panelInput');
+    var panelBless  = document.getElementById('panelBless');
+    var blessName   = document.getElementById('blessName');
+    var blessText   = document.getElementById('blessText');
+    var particles   = document.getElementById('burstParticles');
+
+    /* ========== 生成开场粒子（星光 + 桂花碎片） ========== */
+    function spawnParticles() {
+      particles.innerHTML = '';
+      var isMobile = window.innerWidth < 640;
+      var count = isMobile ? 60 : 96;   /* 性能友好范围 */
+      var frag = document.createDocumentFragment();
+      for (var i = 0; i < count; i++) {
+        var p = document.createElement('div');
+        p.className = 'pt';
+        var angle = Math.random() * Math.PI * 2;
+        var dist = 90 + Math.random() * (isMobile ? 180 : 260);
+        var dx = Math.cos(angle) * dist;
+        var dy = Math.sin(angle) * dist;
+        var size = 3 + Math.random() * 5;
+        var isStar = Math.random() < 0.5;   /* 星光 vs 桂花碎片 */
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
+        p.style.left = '50%';
+        p.style.top = '50%';
+        p.style.background = isStar ? 'rgba(255,215,0,.95)' : 'rgba(255,140,0,.85)';
+        p.style.borderRadius = isStar ? '50%' : '2px';             /* 碎片为小方块 */
+        p.style.setProperty('--dx', dx + 'px');
+        p.style.setProperty('--dy', dy + 'px');
+        p.style.setProperty('--rot', (Math.random() * 360) + 'deg');
+        p.style.animationDuration = (0.6 + Math.random() * 0.45) + 's';
+        p.style.animationDelay = (0.15 + Math.random() * 0.18) + 's';
+        frag.appendChild(p);
+      }
+      particles.appendChild(frag);
+    }
+    function clearParticles() { particles.innerHTML = ''; }
+
+    /* ========== 打开弹窗：4 阶段开场 1.2s ========== */
+    function openModal() {
+      // 状态复位（含 out-down，防止上次残留）
+      overlay.classList.remove('intro', 'engraving', 'closing');
+      panelInput.classList.add('active');
+      panelBless.classList.remove('active', 'lit', 'out-down');
+
+      spawnParticles();                            // 准备粒子
+      // 同帧添加 show+intro：避免中间帧闪现完整卡片
+      overlay.classList.add('show', 'intro');
+      document.body.classList.add('modal-open');   // 禁止底层滚动
+      syncViewportHeight();                        // 按当前可视高度定弹窗高度
+
+      // 阶段4：逐次点亮完成后，输入框自动聚焦并滚入可视区（1.2s 后）
+      setTimeout(function () {
+        nameInput.focus();
+        scrollInputIntoView();
+      }, 1260);
+    }
+
+    /* ========== 移动端：输入法弹出时把弹窗限制在真实可视区内 ========== */
+    function syncViewportHeight() {
+      if (!window.visualViewport) return;
+      overlay.style.height = window.visualViewport.height + 'px';
+    }
+    function scrollInputIntoView() {
+      var r = nameInput.getBoundingClientRect();
+      var h = overlay.clientHeight;
+      // 输入框超出弹窗可视区底部时，滚动卡片使输入框可见
+      if (r.bottom > h - 8) {
+        var modal = document.querySelector('.modal');
+        if (modal) modal.scrollTop += (r.bottom - h + 8);
+      }
+    }
+
+    /* ========== 关闭弹窗：收束动画 ========== */
+    function closeModal() {
+      // 立即移除 intro/engraving：动画 fill 不再覆盖 closing 的收缩过渡
+      overlay.classList.remove('intro', 'engraving');
+      overlay.classList.add('closing');            // 触发圆月收缩消失
+      cdGen++;                                     // 中断进行中的粒子倒计时
+      cdRunning = false;
+      engravingLock = false;                       // 倒计时/刻印中关闭则解锁
+      clearTimeout(playTimer);                     // 取消玩法区域展开定时
+      playArea.classList.remove('open');           // 折叠玩法区域
+      document.getElementById('countdown').classList.remove('show');
+      closeAuthor();                               // 关闭作者弹窗（若开启）
+      setTimeout(function () {
+        // 若期间被重新打开（closing 已复位），跳过清理，避免误杀新弹窗
+        if (!overlay.classList.contains('closing')) return;
+        overlay.classList.remove('show', 'closing');
+        overlay.style.height = '';                // 复位高度，交由 CSS inset 控制
+        clearParticles();
+        document.body.classList.remove('modal-open');  // 恢复底层滚动
+      }, 360);
+    }
+
+    /* ========== 随机调取一条祝福语，并按字拆分以便逐字浮现 ========== */
+    function randomBless() {
+      return BLESSINGS[Math.floor(Math.random() * BLESSINGS.length)];
+    }
+    function setBlessText(text) {
+      blessText.innerHTML = '';
+      var delay;
+      for (var i = 0; i < text.length; i++) {
+        var s = document.createElement('span');
+        s.textContent = text.charAt(i);
+        delay = 0.5 + i * 0.12;                  // 名字浮现后开始，每字间隔 120ms
+        s.style.setProperty('--d', delay.toFixed(2) + 's');
+        blessText.appendChild(s);
+      }
+      blessCharCount = text.length;              // 记录字数，用于计算玩法区域展开时机
+      return text.length;
+    }
+
+    /* ========== 递进式双玩法：桂花许愿 → 中秋月签 ========== */
+    var LOT_SIGNS = [
+      { type: '大吉 · 月圆福至', words: '明月照前路，万事皆顺遂，阖家安康，岁岁欢喜' },
+      { type: '大吉 · 所愿皆成', words: '明月揽好运，前路皆坦途，心之所向，终有所成' },
+      { type: '吉 · 喜乐常伴', words: '烟火向星辰，所愿皆成真，岁岁欢愉，年年胜意' },
+      { type: '吉 · 平安顺遂', words: '清风伴明月，平安即是福，知足常乐，步步向好' },
+      { type: '小吉 · 渐入佳境', words: '好事缓缓而至，静待繁花盛开，终有回甘' },
+      { type: '小吉 · 佳音频传', words: '月满渐圆满，佳音在路上，耐心等候，自有惊喜' }
+    ];
+    var playArea   = document.getElementById('playArea');
+    var wishGame   = document.getElementById('wishGame');
+    var lotGame    = document.getElementById('lotGame');
+    var wishInput  = document.getElementById('wishInput');
+    var wishWrap   = document.querySelector('.wish-wrap');
+    var wishBtn    = document.getElementById('wishBtn');
+    var lotBtn     = document.getElementById('lotBtn');
+    var lotCard    = document.getElementById('lotCard');
+    var lotType    = document.getElementById('lotType');
+    var lotWords   = document.getElementById('lotWords');
+    var wishFlight = document.getElementById('wishFlight');
+    var moonFlash  = document.getElementById('moonFlash');
+    var lotBeam    = document.getElementById('lotBeam');
+    var blessCharCount = 0;
+    var playTimer  = null;
+    var wishLock   = false;                      // 许愿仅可提交一次
+    var lotShaking = false;                      // 摇签防重入
+
+    /* 重置玩法为初始许愿状态（showWish=false 时用于切到月签） */
+    function resetPlayArea(showWish) {
+      wishLock = false;
+      wishInput.value = '';
+      wishWrap.classList.remove('fade');
+      wishFlight.classList.remove('fly');
+      wishFlight.innerHTML = '';
+      moonFlash.classList.remove('burst');
+      Array.prototype.forEach.call(moonFlash.parentNode.querySelectorAll('.flash-star'), function (el) { el.remove(); });
+      lotCard.classList.remove('show');
+      lotBtn.classList.remove('shaking');
+      lotBeam.classList.remove('on');              // 光柱复位
+      takeBtn.classList.remove('reveal');          // 玩法未结束前「收下祝福」不出现
+      if (showWish) {
+        wishGame.hidden = false; wishGame.classList.add('active');
+        lotGame.hidden = true;  lotGame.classList.remove('active');
+      } else {
+        wishGame.hidden = true;  wishGame.classList.remove('active');
+        lotGame.hidden = false;  lotGame.classList.add('active');
+      }
+    }
+
+    /* 月签玩法：摇签求福（摇晃 1s → 签文卡片回弹，可重复抽取） */
+    function shakeLot() {
+      if (lotShaking) return;
+      lotShaking = true;
+      lotBtn.classList.remove('shaking');
+      void lotBtn.offsetWidth;
+      lotBtn.classList.add('shaking');
+      lotCard.classList.remove('show');
+      // 光柱升起，酝酿开签仪式感
+      lotBeam.classList.remove('on');
+      void lotBeam.offsetWidth;
+      lotBeam.classList.add('on');
+      setTimeout(function () {
+        lotBtn.classList.remove('shaking');
+        var s = LOT_SIGNS[Math.floor(Math.random() * LOT_SIGNS.length)];
+        lotType.textContent = s.type;
+        lotWords.textContent = s.words;
+        lotCard.classList.remove('show');
+        void lotCard.offsetWidth;
+        lotCard.classList.add('show');           // 回弹弹出，停留当前界面
+        lotShaking = false;
+        // 全部玩法结束（已抽取月签）：「收下祝福」按钮淡入出现
+        takeBtn.classList.add('reveal');
+      }, 1000);
+    }
+
+    /* 圆月接触瞬间：光晕爆发 + 星光粒子散出 */
+    function spawnFlashStars(x, y) {
+      for (var i = 0; i < 8; i++) {
+        var s = document.createElement('div');
+        s.className = 'flash-star';
+        s.style.left = x + 'px';
+        s.style.top = y + 'px';
+        var ang = Math.random() * Math.PI * 2;
+        var d = 40 + Math.random() * 42;
+        s.style.setProperty('--dx', Math.cos(ang) * d + 'px');
+        s.style.setProperty('--dy', Math.sin(ang) * d + 'px');
+        moonFlash.parentNode.appendChild(s);
+        void s.offsetWidth;
+        s.classList.add('go');
+        (function (el) { setTimeout(function () { el.remove(); }, 750); })(s);
+      }
+    }
+
+    /* 许愿提交：文字渐隐为金色光点 → 花瓣聚拢包裹 → 沿弧线飞向顶部圆月 */
+    function sendWish() {
+      if (wishLock) return;
+      wishLock = true;                           // 仅可提交一次
+      wishWrap.classList.add('fade');            // 输入文字渐隐
+
+      var modal = document.querySelector('.modal');
+      var mR = modal.getBoundingClientRect();
+      var iR = wishInput.getBoundingClientRect();
+      var sX = iR.left + iR.width / 2 - mR.left; // 起点：输入框中心（相对 modal）
+      var sY = iR.top + iR.height / 2 - mR.top;
+      var moonEl = document.getElementById('moonTop');
+      var moR = moonEl.getBoundingClientRect();
+      var eX = moR.left + moR.width / 2 - mR.left; // 终点：顶部圆月中心
+      var eY = moR.top + moR.height / 2 - mR.top;
+
+      // 光点 + 3-5 片桂花花瓣，容器定位在起点，CSS 组合动画形成弧线飞行
+      wishFlight.style.left = sX + 'px';
+      wishFlight.style.top = sY + 'px';
+      wishFlight.style.setProperty('--tx', (eX - sX) + 'px');
+      wishFlight.style.setProperty('--ty', (eY - sY) + 'px');
+      wishFlight.innerHTML = '';
+      var core = document.createElement('div');
+      core.className = 'flight-core';
+      wishFlight.appendChild(core);
+      var petalN = 3 + Math.floor(Math.random() * 3);
+      for (var i = 0; i < petalN; i++) {
+        var p = document.createElement('div');
+        p.className = 'flight-petal';
+        var ang = (i / petalN) * Math.PI * 2 + Math.random() * .5;
+        var dist = 26 + Math.random() * 18;
+        p.style.setProperty('--ox', Math.cos(ang) * dist + 'px');
+        p.style.setProperty('--oy', Math.sin(ang) * dist + 'px');
+        wishFlight.appendChild(p);
+      }
+      moonFlash.style.left = eX + 'px';          // 光晕爆发层定位到圆月
+      moonFlash.style.top = eY + 'px';
+      void wishFlight.offsetWidth;               // 强制重排以触发飞行动画
+      wishFlight.classList.add('fly');
+
+      setTimeout(function () {                   // 接触瞬间：光晕爆发 + 星光
+        moonFlash.classList.add('burst');
+        spawnFlashStars(eX, eY);
+      }, 1500);
+      setTimeout(function () {                   // 约 2s 后自动切换中秋月签玩法
+        resetPlayArea(false);
+      }, 2000);
+    }
+
+    /* ========== 作者信息三级弹窗 ========== */
+    var authorOverlay = document.getElementById('authorOverlay');
+    var authorCard    = document.getElementById('authorCard');
+    var authorL1      = document.getElementById('authorL1');
+    var authorL2      = document.getElementById('authorL2');
+    var authorL3      = document.getElementById('authorL3');
+    var authorNext1   = document.getElementById('authorNext1');
+    var authorNext2   = document.getElementById('authorNext2');
+    var authorClose1  = document.getElementById('authorClose1');
+    var authorClose2  = document.getElementById('authorClose2');
+    var authorClose3  = document.getElementById('authorClose3');
+    var authorFab     = document.getElementById('authorFab');
+    var authorCanvas  = document.getElementById('authorCanvas');
+    var authorLine1   = document.getElementById('authorLine1');
+    var authorLine2   = document.getElementById('authorLine2');
+    var authorRAF     = null;                   // 仪式动画帧
+    var authorRitual  = false;                  // 仪式运行标志
+
+    function openAuthor() {
+      authorOverlay.classList.add('show');
+      authorCard.classList.remove('collapse');
+      authorNext2.hidden = true;
+      authorL1.hidden = false;
+      authorL2.hidden = true;
+      authorL3.hidden = true;
+      authorLine1.innerHTML = '';
+      authorLine2.innerHTML = '';
+      authorLine1.classList.remove('show');
+      authorLine2.classList.remove('show');
+      // 重置「得加钱」解锁状态
+      payUnlocked = false;
+      payTip.hidden = true;
+      payTip.classList.remove('show');
+      authorPayBtn.textContent = '真的想了解？得加钱 💰';
+      authorPayBtn.style.color = '';
+      authorPayBtn.style.borderColor = '';
+    }
+    function closeAuthor() {
+      authorOverlay.classList.remove('show');
+      stopAuthorRitual();
+    }
+    function stopAuthorRitual() {
+      authorRitual = false;
+      if (authorRAF) { cancelAnimationFrame(authorRAF); authorRAF = null; }
+    }
+
+    /* 文字沿螺旋轨迹逐字聚合 */
+    function buildSpiralLine(container, text, lineIdx) {
+      container.innerHTML = '';
+      container.classList.remove('show');
+      for (var i = 0; i < text.length; i++) {
+        var s = document.createElement('span');
+        s.className = 'spiral-char';
+        s.textContent = text.charAt(i);
+        var ang = i * 0.85 + lineIdx * 2.6 + 0.4;      /* 螺旋角度递增 */
+        var r = 58 + lineIdx * 18 + (i % 4) * 8;        /* 螺旋半径 */
+        s.style.setProperty('--tx', Math.cos(ang) * r + 'px');
+        s.style.setProperty('--ty', Math.sin(ang) * r + 'px');
+        s.style.setProperty('--d', (0.15 + i * 0.07 + lineIdx * 0.3) + 's');
+        container.appendChild(s);
+      }
+    }
+
+    /* 斐波那契螺旋粒子仪式：1,1,2,3,5,8,13 波次爆发 → 星盘光环 → 圆月点亮 → 文字聚合 */
+    function runAuthorRitual() {
+      stopAuthorRitual();
+      authorRitual = true;
+      var ctx = authorCanvas.getContext('2d');
+      var W = authorCanvas.clientWidth || 320;
+      var H = authorCanvas.clientHeight || 236;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      authorCanvas.width = W * dpr;
+      authorCanvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var cx = W / 2, cy = H / 2;
+      var WAVES = [1, 1, 2, 3, 5, 8, 13];
+      var particles = [];
+      var t0 = performance.now();
+      var angleBase = 0;
+      var waveIdx = 0;
+
+      function frame(now) {
+        if (!authorRitual) { ctx.clearRect(0, 0, W, H); return; }
+        var el = now - t0;
+        /* 按斐波那契节奏从中心螺旋发射粒子 */
+        while (waveIdx < WAVES.length && el >= waveIdx * 130) {
+          for (var k = 0; k < WAVES[waveIdx]; k++) {
+            var ang = angleBase + (k + Math.random() * .6);
+            var sp = 55 + Math.random() * 45;
+            particles.push({ t: k % 3, x: cx, y: cy, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, life: 1, spin: Math.random() * 6.28 });
+          }
+          angleBase += 2.39996;          /* 黄金角 ≈137.5° */
+          waveIdx++;
+        }
+        ctx.clearRect(0, 0, W, H);
+        /* 金色星盘光环 */
+        for (var r = 0; r < 3; r++) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, 40 + r * 22, 0, 6.2832);
+          ctx.strokeStyle = 'rgba(255,215,0,' + (0.3 - r * 0.07) + ')';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+        /* 中心圆月：仪式推进中被粒子点亮 */
+        var glow = Math.min(1, el / 1400);
+        var grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 28);
+        grad.addColorStop(0, 'rgba(255,242,180,' + (0.85 + 0.15 * glow) + ')');
+        grad.addColorStop(0.55, 'rgba(255,190,60,' + (0.45 + 0.4 * glow) + ')');
+        grad.addColorStop(1, 'rgba(255,140,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath(); ctx.arc(cx, cy, 28, 0, 6.2832); ctx.fill();
+        /* 粒子：金色光点 / 桂花花瓣 / 星光碎片 */
+        for (var i = particles.length - 1; i >= 0; i--) {
+          var p = particles[i];
+          p.x += p.vx * 0.016; p.y += p.vy * 0.016;
+          p.vx *= 0.982; p.vy *= 0.982;
+          p.life -= 0.007;
+          if (p.life <= 0) { particles.splice(i, 1); continue; }
+          var a = Math.max(0, p.life);
+          if (p.t === 0) {
+            ctx.globalAlpha = a;
+            ctx.beginPath(); ctx.arc(p.x, p.y, 2.4, 0, 6.2832); ctx.fillStyle = '#ffd700'; ctx.fill();
+            ctx.globalAlpha = a * .3;
+            ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, 6.2832); ctx.fillStyle = '#ffb300'; ctx.fill();
+          } else if (p.t === 1) {
+            ctx.globalAlpha = a;
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.spin);
+            ctx.fillStyle = 'rgba(255,150,40,.9)';
+            ctx.beginPath(); ctx.ellipse(0, 0, 4.6, 3, 0, 0, 6.2832); ctx.fill();
+            ctx.restore();
+          } else {
+            ctx.globalAlpha = a;
+            ctx.strokeStyle = '#fff3c0'; ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(p.x - 4, p.y); ctx.lineTo(p.x + 4, p.y);
+            ctx.moveTo(p.x, p.y - 4); ctx.lineTo(p.x, p.y + 4);
+            ctx.stroke();
+          }
+        }
+        ctx.globalAlpha = 1;
+        if (el < 2400) { authorRAF = requestAnimationFrame(frame); }
+        else { authorRAF = null; }
+      }
+
+      /* 粒子爆发后半程：作者信息沿螺旋轨迹逐字聚合浮现 */
+      setTimeout(function () {
+        if (!authorOverlay.classList.contains('show')) return;
+        buildSpiralLine(authorLine1, '广西科技大学', 0);
+        buildSpiralLine(authorLine2, '机械与汽车工程学院', 1);
+        authorLine1.classList.add('show');
+        authorLine2.classList.add('show');
+      }, 1100);
+      /* 仪式完成后展示「透彻了解作者」 */
+      setTimeout(function () {
+        if (!authorOverlay.classList.contains('show')) return;
+        authorNext2.hidden = false;
+      }, 2300);
+
+      authorRAF = requestAnimationFrame(frame);
+    }
+
+    /* ========== 点击涟漪（主按钮环形光波扩散） ========== */
+    function spawnRipple(e, btn) {
+      var rect = btn.getBoundingClientRect();
+      var r = document.createElement('span');
+      r.className = 'ripple';
+      r.style.left = (e.clientX - rect.left) + 'px';
+      r.style.top  = (e.clientY - rect.top) + 'px';
+      btn.appendChild(r);
+      setTimeout(function () { r.remove(); }, 650);
+    }
+
+    /* ========== 3秒粒子倒计时（祝福刻印前） ========== */
+    var COUNTDOWN_SEQ = ['3', '2', '1'];
+    /* 5x7 点阵字形：1 表示亮像素 */
+    var GLYPHS = {
+      '3': ['01110', '10001', '00001', '01110', '00001', '10001', '01110'],
+      '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
+      '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110']
+    };
+    var cdRunning = false;
+    var cdGen = 0;                                // 代际计数：关闭弹窗时递增以中断倒计时
+    function runCountdown(onDone) {
+      if (cdRunning) return;
+      cdRunning = true;
+      var myGen = ++cdGen;
+      var box = document.getElementById('countdown');
+      var canvas = document.getElementById('cdCanvas');
+      var ctx = canvas.getContext('2d');
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var W = box.clientWidth || window.innerWidth;
+      var H = box.clientHeight || window.innerHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      var cell = Math.round(Math.min(W, H) * 0.05); /* 点阵格子尺寸 */
+      var cx = W / 2;
+      var cy = H / 2 - 20;
+
+      /* 返回某数字所有亮像素的中心点 */
+      function glyphPoints(d) {
+        var rows = GLYPHS[d], pts = [];
+        var h = rows.length, w = rows[0].length;
+        for (var r = 0; r < h; r++) {
+          for (var c = 0; c < w; c++) {
+            if (rows[r].charAt(c) === '1') {
+              pts.push([cx + (c - (w - 1) / 2) * cell, cy + (r - (h - 1) / 2) * cell]);
+            }
+          }
+        }
+        return pts;
+      }
+
+      var N = 200;
+      var P = [];
+      for (var i = 0; i < N; i++) {
+        // 粒子从中心出发，切数字时爆发散射再聚集成形
+        P.push({ x: W / 2, y: cy, tx: W / 2, ty: cy, bo: [0, 0], bt: 0 });
+      }
+
+      /* 切换数字：赋予散射爆速，随后减速聚拢到新字形位置 */
+      function setDigit(d) {
+        var pts = glyphPoints(d);
+        for (var i = 0; i < P.length; i++) {
+          var tp = pts[Math.floor(Math.random() * pts.length)];
+          P[i].bo[0] = (Math.random() - 0.5) * cell * 11; /* 爆发位移 */
+          P[i].bo[1] = (Math.random() - 0.5) * cell * 11;
+          P[i].bt = 1;
+          P[i].tx = tp[0];
+          P[i].ty = tp[1];
+        }
+      }
+
+      var segDur = 1000;               /* 每帧数字停留 1s */
+      var start = performance.now();
+      var idx = -1;
+
+      function draw() {
+        // 弹窗被关闭(代际变化)时立即中断循环
+        if (myGen !== cdGen) { box.classList.remove('show'); cdRunning = false; return; }
+        var now = performance.now();
+        var seg = Math.floor((now - start) / segDur);
+        if (seg >= COUNTDOWN_SEQ.length) { finish(); return; } /* 倒计时结束 */
+        if (seg !== idx) { idx = seg; setDigit(COUNTDOWN_SEQ[seg]); }
+
+        ctx.clearRect(0, 0, W, H);
+        for (var i = 0; i < P.length; i++) {
+          var p = P[i];
+          p.bt *= 0.9;                    /* 爆发渐弱，聚拢成形 */
+          var dx = (p.tx + p.bo[0] * p.bt) - p.x;
+          var dy = (p.ty + p.bo[1] * p.bt) - p.y;
+          p.x += dx * 0.18;
+          p.y += dy * 0.18;
+          /* 粒子核心 */
+          ctx.globalAlpha = 0.95;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, cell * 0.13, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffd700';
+          ctx.fill();
+          /* 金色光晕 */
+          ctx.globalAlpha = 0.16;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, cell * 0.34, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffb300';
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(draw);
+      }
+
+      function finish() {
+        box.classList.remove('show');
+        cdRunning = false;
+        if (typeof onDone === 'function') onDone();
+      }
+
+      box.classList.add('show');
+      requestAnimationFrame(draw);
+    }
+
+    /* ========== 确认：先 3 秒粒子倒计时，再刻印切换到祝福面板 ========== */
+    var engravingLock = false;                     // 防止刻印期间重复触发
+    function doConfirm() {
+      if (engravingLock) return;
+      engravingLock = true;
+      var name = nameInput.value;                 // 无校验，直接作为祝福对象
+      blessName.textContent = name;
+      setBlessText(randomBless());
+      nameInput.blur();                            // 收起键盘，让倒计时干净呈现
+
+      runCountdown(function () {
+        // 若期间弹窗已关闭，直接解锁返回
+        if (!overlay.classList.contains('show')) { engravingLock = false; return; }
+        overlay.classList.add('engraving');        // 输入面板上飞淡出
+        setTimeout(function () {
+          overlay.classList.remove('engraving');
+          if (!overlay.classList.contains('show')) { engravingLock = false; return; }
+          panelInput.classList.remove('active');
+          panelBless.classList.add('active');
+          // 重启刻印动画（lit 常驻保留：法阵持续旋转、姓名保持金色辉光）
+          panelBless.classList.remove('lit');
+          void panelBless.offsetWidth;
+          panelBless.classList.add('lit');
+          // 祝福语逐字点亮完成后，延迟 1.2s 展开玩法区域（初始为桂花许愿）
+          clearTimeout(playTimer);
+          playTimer = setTimeout(function () {
+            if (!overlay.classList.contains('show')) return; // 已关闭则跳过
+            playArea.classList.add('open');        // 从上向下平滑展开
+            resetPlayArea(true);                   // 初始显示桂花许愿玩法
+          }, (0.5 + (blessCharCount - 1) * 0.12 + 0.55 + 1.2) * 1000);
+          engravingLock = false;                   // 输入面板已隐藏，解锁
+        }, 430);
+      });
+    }
+
+    /* ========== 再点亮一次：返回输入面板，清空聚焦，复用收束感 ========== */
+    function doAgain() {
+      // 玩法重置为初始许愿状态，并折叠玩法区域（下次点亮后重新展开）
+      clearTimeout(playTimer);
+      playArea.classList.remove('open');
+      resetPlayArea(true);
+      panelBless.classList.add('out-down');       // 轻微收束淡出
+      setTimeout(function () {
+        panelBless.classList.remove('active', 'lit', 'out-down');
+        // 若期间弹窗已被关闭，仅清理类名即可
+        if (!overlay.classList.contains('show')) return;
+        panelInput.classList.add('active');
+        nameInput.value = '';
+        nameInput.focus();
+      }, 320);
+    }
+
+    /* ========== 事件绑定 ========== */
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeModal();      // 点击蒙层关闭
+    });
+    confirmBtn.addEventListener('click', function (e) {
+      spawnRipple(e, confirmBtn);
+      doConfirm();
+    });
+    takeBtn.addEventListener('click', closeModal); // 收下祝福：收束关闭
+    againBtn.addEventListener('click', doAgain);
+    // 玩法绑定：寄往明月 / 摇签求福
+    wishBtn.addEventListener('click', sendWish);
+    wishInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); sendWish(); }
+    });
+    lotBtn.addEventListener('click', shakeLot);
+    // 作者三级弹窗绑定
+    authorFab.addEventListener('click', openAuthor);
+    // 第1层 → 第2层：卡片收缩为金色光点 → 启动斐波那契粒子仪式
+    authorNext1.addEventListener('click', function () {
+      authorCard.classList.add('collapse');
+      setTimeout(function () {
+        authorCard.classList.remove('collapse');
+        authorL1.hidden = true;
+        authorL2.hidden = false;
+        runAuthorRitual();
+      }, 420);
+    });
+    // 第2层 → 第3层：粒子光环收拢 → 保密页
+    authorNext2.addEventListener('click', function () {
+      stopAuthorRitual();
+      authorCard.classList.add('collapse');
+      setTimeout(function () {
+        authorCard.classList.remove('collapse');
+        authorNext2.hidden = true;
+        authorL2.hidden = true;
+        authorL3.hidden = false;
+      }, 420);
+    });
+    // 各层独立关闭路径：右上角 ×
+    authorClose1.addEventListener('click', closeAuthor);
+    authorClose2.addEventListener('click', closeAuthor);
+    authorClose3.addEventListener('click', closeAuthor);
+    // 「得加钱」彩蛋：点击后解锁作者档案卡片，停留展示
+    var authorPayBtn = document.getElementById('authorPayBtn');
+    var payTip = document.getElementById('payTip');
+    var payUnlocked = false;
+    authorPayBtn.addEventListener('click', function () {
+      if (payUnlocked) return;
+      payUnlocked = true;
+      payTip.hidden = false;
+      payTip.classList.remove('show');
+      void payTip.offsetWidth;
+      payTip.classList.add('show');          // 弹跳浮现，停留展示
+      authorPayBtn.textContent = '已解锁 ✓';
+      authorPayBtn.style.color = '#ffd700';
+      authorPayBtn.style.borderColor = 'rgba(255,215,0,.9)';
+    });
+    // 点击蒙层关闭
+    authorOverlay.addEventListener('click', function (e) {
+      if (e.target === authorOverlay) closeAuthor();
+    });
+    // 回车键快捷确认
+    nameInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        spawnRipple(
+          { clientX: confirmBtn.getBoundingClientRect().left + confirmBtn.offsetWidth / 2,
+            clientY: confirmBtn.getBoundingClientRect().top + confirmBtn.offsetHeight / 2 },
+          confirmBtn);
+        doConfirm();
+      }
+    });
+    // Esc 关闭（增强）
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && overlay.classList.contains('show')) closeModal();
+    });
+
+    /* ========== 轻量资源回收：避免重复粒子堆积 ========== */
+    window.addEventListener('resize', clearParticles);
+
+    /* ========== 移动端输入法可视区监听：弹窗打开时同步高度、滚动输入框 ========== */
+    if (window.visualViewport) {
+      var onViewportChange = function () {
+        if (!overlay.classList.contains('show')) return;
+        syncViewportHeight();
+        if (document.activeElement === nameInput) scrollInputIntoView();
+      };
+      window.visualViewport.addEventListener('resize', onViewportChange);
+      window.visualViewport.addEventListener('scroll', onViewportChange);
+    }
+
+    /* ========== 输入法弹出时默认输入框暴露在可视区 ========== */
+    nameInput.addEventListener('focus', function () {
+      if (!overlay.classList.contains('show')) return;
+      // 延迟一帧等待键盘/布局稳定后再校正
+      setTimeout(function () { scrollInputIntoView(); }, 80);
+    });
+  </script>
+
+</body>
+</html>
